@@ -12,7 +12,7 @@ namespace e503 {
         this->x = x;
         this->y = y;
         this->theta = theta;
-        parent = NULL;
+        parent = 0;
         p.x = x;
         p.y = y;
     }
@@ -35,4 +35,7 @@ namespace e503 {
         return (abs(this->x - node->x) < distanceTolerance) &  (abs(this->y - node->y) < distanceTolerance);
     }
 
+    bool Node::equals(Node *node) {
+        return this->x == node->x & this->y == node->y & this->theta == node->theta;
+    }
 }

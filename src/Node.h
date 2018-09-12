@@ -18,6 +18,7 @@ namespace e503 {
         Node(geometry_msgs::Point);
         bool printNode();
         bool closeTo(Node *node, float distanceTolerance);
+        bool equals(Node* node);
     };
 }
 

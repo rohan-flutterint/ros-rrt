@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     Node *goalNode = new Node(18,18,0);
     RRT rtt;
     rtt.insert(startNode, 0);
+    std::vector<Node *> shortestPath;
 
     // the goalNode is found
     bool goalFound = false;
@@ -124,34 +125,48 @@ int main(int argc, char **argv) {
         /************************* From here, we are using points, lines, to draw a tree structure *** ******************/
 
         //we use static here since we want to incrementally add contents in these mesgs, otherwise contents in these msgs will be cleaned in every ros spin.
-        static visualization_msgs::Marker vertices, edges;
+        static visualization_msgs::Marker vertices, edges, sp_vertices, sp_edges;
 
-        vertices.type = visualization_msgs::Marker::POINTS;
-        edges.type = visualization_msgs::Marker::LINE_LIST;
+        vertices.type = sp_vertices.type= visualization_msgs::Marker::POINTS;
+        edges.type = sp_edges.type = visualization_msgs::Marker::LINE_LIST;
 
-        vertices.header.frame_id = edges.header.frame_id = "map";
-        vertices.header.stamp = edges.header.stamp = ros::Time::now();
+        vertices.header.frame_id = edges.header.frame_id = sp_edges.header.frame_id = sp_vertices.header.frame_id = "map";
+        vertices.header.stamp = edges.header.stamp = sp_edges.header.stamp = sp_vertices.header.stamp = ros::Time::now();
         vertices.ns = edges.ns = "vertices_and_lines";
-        vertices.action = edges.action = visualization_msgs::Marker::ADD;
-        vertices.pose.orientation.w = edges.pose.orientation.w = 1.0;
+        sp_edges.ns = sp_vertices.ns = "shortest_path";
+        vertices.action = edges.action = sp_edges.action = sp_vertices.action = visualization_msgs::Marker::ADD;
+        vertices.pose.orientation.w = edges.pose.orientation.w = sp_vertices.pose.orientation.w = sp_edges.pose.orientation.w = 1.0;
 
         vertices.id = 0;
         edges.id = 1;
+        sp_vertices.id = 0;
+        sp_edges.id = 1;
 
         // POINTS markers use x and y scale for width/height respectively
         vertices.scale.x = 0.05;
         vertices.scale.y = 0.05;
 
+        sp_vertices.scale.x = 0.1;
+        sp_vertices.scale.y = 0.1;
+
         // LINE_STRIP/LINE_LIST markers use only the x component of scale, for the line width
         edges.scale.x = 0.02; //tune it yourself
+
+        sp_edges.scale.x = 0.1;
 
         // Points are green
         vertices.color.g = 1.0f;
         vertices.color.a = 1.0;
 
+        sp_vertices.color.r = 1.0f;
+        sp_vertices.color.a = 1.0;
+
         // Line list is red
         edges.color.r = 1.0;
         edges.color.a = 1.0;
+
+        sp_edges.color.g = 1.0;
+        sp_edges.color.a = 1.0;
 
         geometry_msgs::Point p0 = startNode->getNodeAsPoint();
         float length = 1;		//length of each edge
@@ -180,16 +195,36 @@ int main(int argc, char **argv) {
                     if (newNode->closeTo(goalNode, goalFindTolerance)) {
                         rtt.insert(goalNode, newNode);
                         goalFound = true;
-                        std::cout << "GOAL FOUND!";
                         edges.points.push_back(newNode->getNodeAsPoint());
                         edges.points.push_back(goalNode->getNodeAsPoint());
+
+                        //calculate shortest path
+                        shortestPath = rtt.extractShortestPath(goalNode);
                     }
                 }
             }
         }
+        bool shortestPathDrawn = false;
+        int herz = 10;
+        if ((frame_count % herz == 0) & goalFound & !shortestPathDrawn) {
+            if (!shortestPath.empty()) {
+                Node *pathNode = shortestPath.back();
+                Node *prevNode = pathNode->parent;
+                prevNode = (prevNode == 0) ? startNode : prevNode;
+                sp_vertices.points.push_back(pathNode->getNodeAsPoint());
+                sp_edges.points.push_back(prevNode->getNodeAsPoint());
+                sp_edges.points.push_back(pathNode->getNodeAsPoint());
+                prevNode = pathNode;
+                shortestPath.pop_back();
+            }
+            else
+                shortestPathDrawn = true;
+        }
         //publish msgs
         marker_pub.publish(vertices);
+        marker_pub.publish(sp_vertices);
         marker_pub.publish(edges);
+        marker_pub.publish(sp_edges);
 /*
 
 

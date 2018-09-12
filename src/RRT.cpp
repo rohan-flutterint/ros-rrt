@@ -109,9 +109,17 @@ namespace e503 {
                 x = currentNode->x + epsilon*cos(vectorGradient);
             }
         }
-        //todo: change this
         return new Node(x, y, 0);
-        //return new Node(currentNode->x +1, currentNode->y +1, 0);
     }
 
+    std::vector<Node *> RRT::extractShortestPath(Node * goal){
+        std::vector<Node *> shortestPathFromGoal;
+        shortestPathFromGoal.push_back(goal);
+        Node *parentNode = goal->parent;
+        while (!parentNode->equals(root)) {
+            parentNode = parentNode->parent;
+            shortestPathFromGoal.push_back(parentNode);
+        }
+        return shortestPathFromGoal;
+    }
 }

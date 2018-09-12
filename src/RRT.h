@@ -21,6 +21,8 @@ namespace e503 {
 
         Node *extendNode(Node *currentNode, Node *randomNode, float epsilon);
 
+        std::vector<Node *> extractShortestPath(Node *goal);
+
     private:
         Node *root;
 
