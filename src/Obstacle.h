@@ -10,7 +10,7 @@
 namespace e503 {
     class Obstacle {
     public:
-        Obstacle(float min_x, float max_x, float min_y, float max_y);
+        Obstacle(float min_x, float max_x, float min_y, float max_y, float robotScaleX, float robotScaleY);
 
         bool isWithinObstacle(Node *node);
 

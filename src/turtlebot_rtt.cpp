@@ -26,12 +26,14 @@ int main(int argc, char **argv) {
     int frame_count = 0;
     float f = 0.0;
 
+    float robot_scale_x = 1;
+    float robot_scale_y = 1;
     // for generating a random number
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 20, 0, 20);
-    stateSpace.addObstacle(new Obstacle(7, 13, 12, 16));
-    stateSpace.addObstacle(new Obstacle(3, 9, 18, 10));
-    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5));
+    stateSpace.addObstacle(new Obstacle(7, 13 , 12, 16, robot_scale_x, robot_scale_y));
+    stateSpace.addObstacle(new Obstacle(3, 9 , 18, 10, robot_scale_x, robot_scale_y));
+    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5, robot_scale_x, robot_scale_y));
 
     float EPSILON = 0.5;
     Node *startNode = new Node(0, 0, 0);
@@ -266,7 +268,9 @@ int main(int argc, char **argv) {
         rob.action = path.action = visualization_msgs::Marker::ADD;
         rob.lifetime = path.lifetime = ros::Duration();
 
-        rob.scale.x = rob.scale.y = rob.scale.z = 0.3;
+        rob.scale.x = robot_scale_x;
+        rob.scale.y = robot_scale_y;
+        rob.scale.z = 0.3;
 
         rob.color.r = 1.0f;
         rob.color.g = 0.5f;

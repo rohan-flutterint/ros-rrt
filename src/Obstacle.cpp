@@ -5,11 +5,11 @@
 #include "Obstacle.h"
 
 namespace e503 {
-    Obstacle::Obstacle(float min_x, float max_x, float min_y, float max_y) {
-        this->min_x = min_x;
-        this->min_y = min_y;
-        this->max_x = max_x;
-        this->max_y = max_y;
+    Obstacle::Obstacle(float min_x, float max_x, float min_y, float max_y, float robotScaleX, float robotScaleY) {
+        this->min_x = min_x - robotScaleX;
+        this->min_y = min_y - robotScaleY;
+        this->max_x = max_x + robotScaleX;
+        this->max_y = max_y + robotScaleY;
     }
 
     bool Obstacle::isWithinObstacle(Node *node) {
