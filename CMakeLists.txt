@@ -198,5 +198,5 @@ include_directories(
 # catkin_add_nosetests(test)
 
 add_executable(turtlebot_rtt src/turtlebot_rtt.cpp src/StateSpace.h src/StateSpace.cpp src/Node.cpp src/Node.h
-        src/RRT.h src/RRT.cpp)
+        src/RRT.h src/RRT.cpp src/Obstacle.cpp src/Obstacle.h)
 target_link_libraries(turtlebot_rtt ${catkin_LIBRARIES})

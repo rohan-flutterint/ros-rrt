@@ -6,7 +6,6 @@
 #include "StateSpace.h"
 #include <iostream>
 
-
 namespace e503 {
     StateSpace::StateSpace(float min_x, float max_x, float min_y, float max_y) {
         this->min_x = min_x;
@@ -29,9 +28,16 @@ namespace e503 {
         return ((node->x >= min_x && node->x <= max_x) && (node->y >= min_y && node->y <= max_y));
     }
 
-    bool StateSpace::isObstructed(e503::Node *node) {
+    bool StateSpace::isObstructed(Node *node) {
         if (!isWithinStateSpace(node))
             return true;
-        else return false;
+        else {
+            for(int i = 0; i < obstacles.size(); i++)    {
+                if (obstacles[i]->isWithinObstacle(node)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

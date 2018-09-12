@@ -6,6 +6,8 @@
 #define RTT_GRIDSPACE_H
 
 #include "Node.h"
+#include "Obstacle.h"
+
 namespace e503 {
     /*
      * Assumption: The statespace is a cube. (length >= width)
@@ -22,10 +24,12 @@ namespace e503 {
         bool isObstructed(Node *node);
 
         // add an obstacle to the statespace
-        void addObstacle(Node *node);
+        void addObstacle(Obstacle *obstacle);
 
     private:
         float min_x, max_x, min_y, max_y;
+
+        std::vector<Obstacle *> obstacles;
 
         //generate random float
         float generateRandomNumber(float min, float max);
@@ -33,8 +37,6 @@ namespace e503 {
         //check if the node is within the statespace
         bool isWithinStateSpace(Node *node);
 
-        // check if the node is within an obstacle
-        bool isWithinObstacle(Node *node);
     };
 }
 #endif //RTT_GRIDSPACE_H

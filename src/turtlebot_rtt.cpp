@@ -38,14 +38,14 @@ int main(int argc, char **argv) {
     float goalFindTolerance = 1.0;
 
     while (ros::ok())
-    {   /* *//******************** From here, we are defining and drawing two obstacles in the workspace **************************//*
+    {   /* *//******************** From here, we are defining and drawing two obstacles in the workspace **************************/
 
         // define two obstacles
         visualization_msgs::Marker obst1, obst2;
 
         // Set obst1 and obst2 as a Cube and Cylinder, respectively
         obst1.type = visualization_msgs::Marker::CUBE;
-        obst2.type = visualization_msgs::Marker::CYLINDER;
+        obst2.type = visualization_msgs::Marker::CUBE;
 
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
         obst1.header.frame_id = obst2.header.frame_id = "map";  //NOTE: this should be "paired" to the frame_id entry in Rviz
@@ -60,21 +60,21 @@ int main(int argc, char **argv) {
         obst1.action = obst2.action = visualization_msgs::Marker::ADD;
 
         // Set the scale of the marker
-        obst1.scale.x = obst1.scale.y = obst1.scale.z = 1.0; //1x1x1 here means each side of the cube is 1m long
-        obst2.scale.x = obst2.scale.y = obst2.scale.z = 1.0; //1x1x1 here means the cylinder as diameter 1m and height 1m
+        obst1.scale.x = obst1.scale.y = obst1.scale.z = 2.0; //1x1x1 here means each side of the cube is 1m long
+        obst2.scale.x = obst2.scale.y = obst2.scale.z = 3.0; //1x1x1 here means the cylinder as diameter 1m and height 1m
 
         // Set the pose of the marker. since a side of the obstacle obst1 is 1m as defined above, now we place the obst1 center at (1, 2, 0.5). z-axis is height
-        obst1.pose.position.x = 1;
-        obst1.pose.position.y = 2;
-        obst1.pose.position.z = 0.5;
+        obst1.pose.position.x = 12;
+        obst1.pose.position.y = 14;
+        obst1.pose.position.z = 0;
         obst1.pose.orientation.x = 0.0;
         obst1.pose.orientation.y = 0.0;
         obst1.pose.orientation.z = 0.0;
         obst1.pose.orientation.w = 1.0;	//(x, y, z, w) is a quaternion, ignore it here
 
-        obst2.pose.position.x = -2;
-        obst2.pose.position.y = -1;
-        obst2.pose.position.z = 0.5;
+        obst2.pose.position.x = 10;
+        obst2.pose.position.y = 20;
+        obst2.pose.position.z = 0;
         obst2.pose.orientation = obst1.pose.orientation;
 
         // Set the color red, green, blue. if not set, by default the value is 0
@@ -89,7 +89,6 @@ int main(int argc, char **argv) {
         // publish these messages to ROS system
         marker_pub.publish(obst1);
         marker_pub.publish(obst2);
-*/
         /************************* From here, we are using points, lines, to draw a tree structure *** ******************/
 
         //we use static here since we want to incrementally add contents in these mesgs, otherwise contents in these msgs will be cleaned in every ros spin.
@@ -137,9 +136,8 @@ int main(int argc, char **argv) {
                 } else {
                     randomNode = goal;
                 }
-
                 Node *closestNode = rtt.getNearestNeighbor(randomNode);
-                Node *newNode = rtt.extendNode(closestNode, randomNode, 2.0);
+                Node *newNode = rtt.extendNode(closestNode, randomNode, 1.0);
                 if (!stateSpace.isObstructed(newNode)) {
                     rtt.insert(newNode, closestNode);
                     if (newNode->closeTo(goal, goalFindTolerance)) {

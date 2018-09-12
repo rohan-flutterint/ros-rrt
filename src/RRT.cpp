@@ -96,8 +96,7 @@ namespace e503 {
             }
         }
         else {
-            std::cout<<"deltaX " << deltaX << "\n";
-            double vectorGradient = atan(abs(deltaY) / abs(deltaX));
+            double vectorGradient = abs(atan(deltaY/deltaX));
 
             if (deltaY < 0) {
                 y = currentNode->y - epsilon*sin(vectorGradient);
@@ -112,6 +111,7 @@ namespace e503 {
         }
         //todo: change this
         return new Node(x, y, 0);
+        //return new Node(currentNode->x +1, currentNode->y +1, 0);
     }
 
 }
