@@ -28,12 +28,12 @@ int main(int argc, char **argv) {
     // for generating a random number
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 20, 0, 20);
-    Node *start = new Node(0, 0, 0);
-    Node *goal = new Node(18,18,0);
+    Node *startNode = new Node(0, 0, 0);
+    Node *goalNode = new Node(18,18,0);
     RRT rtt;
-    rtt.insert(start, 0);
+    rtt.insert(startNode, 0);
 
-    // the goal is found
+    // the goalNode is found
     bool goalFound = false;
     float goalFindTolerance = 1.0;
 
@@ -41,54 +41,86 @@ int main(int argc, char **argv) {
     {   /* *//******************** From here, we are defining and drawing two obstacles in the workspace **************************/
 
         // define two obstacles
-        visualization_msgs::Marker obst1, obst2;
+        visualization_msgs::Marker obst1, obst2, start, goal;
 
         // Set obst1 and obst2 as a Cube and Cylinder, respectively
         obst1.type = visualization_msgs::Marker::CUBE;
         obst2.type = visualization_msgs::Marker::CUBE;
+        start.type = visualization_msgs::Marker::SPHERE;
+        goal.type = visualization_msgs::Marker::SPHERE;
 
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-        obst1.header.frame_id = obst2.header.frame_id = "map";  //NOTE: this should be "paired" to the frame_id entry in Rviz
-        obst1.header.stamp = obst2.header.stamp = ros::Time::now();
+        obst1.header.frame_id = obst2.header.frame_id = start.header.frame_id = goal.header.frame_id = "map";
+        obst1.header.stamp = obst2.header.stamp = start.header.stamp = goal.header.stamp = ros::Time::now();
 
         // Set the namespace and id
         obst1.ns = obst2.ns = "obstacles";
         obst1.id = 0;
         obst2.id = 1;
+        start.ns = goal.ns = "markers";
+        start.id = 2;
+        goal.id = 3;
 
         // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-        obst1.action = obst2.action = visualization_msgs::Marker::ADD;
+        obst1.action = obst2.action = start.action = goal.action = visualization_msgs::Marker::ADD;
 
-        // Set the scale of the marker
-        obst1.scale.x = obst1.scale.y = obst1.scale.z = 2.0; //1x1x1 here means each side of the cube is 1m long
-        obst2.scale.x = obst2.scale.y = obst2.scale.z = 3.0; //1x1x1 here means the cylinder as diameter 1m and height 1m
+        start.scale.x = start.scale.y = goal.scale.x = goal.scale.y = 0.5;
+        goal.scale.z = start.scale.z = 0.1;
+                // Set the scale of the marker
+        obst1.scale.x = 2.0;
+        obst1.scale.y = 3.0;
+        obst1.scale.z = obst2.scale.z = 0.5;
+        obst2.scale.x = 4.0;
+        obst2.scale.y = 5.0;
+
+        start.pose.position.x = startNode->x;
+        start.pose.position.y = startNode->y;
+        start.pose.position.z = 0;
+        goal.pose.position.x = goalNode->x;
+        goal.pose.position.y = goalNode->y;
+        goal.pose.position.z = 0;
+
 
         // Set the pose of the marker. since a side of the obstacle obst1 is 1m as defined above, now we place the obst1 center at (1, 2, 0.5). z-axis is height
-        obst1.pose.position.x = 12;
-        obst1.pose.position.y = 14;
+        obst1.pose.position.x = 2;
+        obst1.pose.position.y = 4;
         obst1.pose.position.z = 0;
         obst1.pose.orientation.x = 0.0;
         obst1.pose.orientation.y = 0.0;
         obst1.pose.orientation.z = 0.0;
         obst1.pose.orientation.w = 1.0;	//(x, y, z, w) is a quaternion, ignore it here
 
-        obst2.pose.position.x = 10;
-        obst2.pose.position.y = 20;
+        obst2.pose.position.x = 6;
+        obst2.pose.position.y = 8;
         obst2.pose.position.z = 0;
-        obst2.pose.orientation = obst1.pose.orientation;
+        start.pose.orientation = goal.pose.orientation = obst2.pose.orientation = obst1.pose.orientation;
 
         // Set the color red, green, blue. if not set, by default the value is 0
-        obst1.color.r = 0.0f;
+        obst1.color.r = 1.0f;
         obst1.color.g = 1.0f;
-        obst1.color.b = 0.0f;
+        obst1.color.b = 1.0f;
         obst1.color.a = 1.0;		//be sure to set alpha to something non-zero, otherwise it is transparent
+
         obst2.color = obst1.color;
 
-        obst1.lifetime = obst2.lifetime = ros::Duration();
+        start.color.r = 0.0f;
+        start.color.g = 0.0f;
+        start.color.b = 1.0f;
+        start.color.a = 1.0;
+
+        goal.color.r = 1.0f;
+        goal.color.g = 0.0f;
+        goal.color.b = 0.0f;
+        goal.color.a = 1.0;
+
+
+        obst1.lifetime = obst2.lifetime = start.lifetime = goal.lifetime = ros::Duration();
 
         // publish these messages to ROS system
         marker_pub.publish(obst1);
         marker_pub.publish(obst2);
+        marker_pub.publish(start);
+        marker_pub.publish(goal);
         /************************* From here, we are using points, lines, to draw a tree structure *** ******************/
 
         //we use static here since we want to incrementally add contents in these mesgs, otherwise contents in these msgs will be cleaned in every ros spin.
@@ -121,37 +153,40 @@ int main(int argc, char **argv) {
         edges.color.r = 1.0;
         edges.color.a = 1.0;
 
-        geometry_msgs::Point p0 = start->getNodeAsPoint();
+        geometry_msgs::Point p0 = startNode->getNodeAsPoint();
         float length = 1;		//length of each edge
 
         if (!goalFound) {
             int herz = 10;        //every 10 ROS frames we draw an edge
             if (frame_count % herz == 0) {
 
-                // adding goal bias
+                // adding goalNode bias
                 double randomNumber = ((double) rand() / (RAND_MAX));
                 Node *randomNode = NULL;
                 if (randomNumber > 0.5) {
                     randomNode = stateSpace.genRandomNodeInSpace();
                 } else {
-                    randomNode = goal;
+                    randomNode = goalNode;
                 }
                 Node *closestNode = rtt.getNearestNeighbor(randomNode);
                 Node *newNode = rtt.extendNode(closestNode, randomNode, 1.0);
                 if (!stateSpace.isObstructed(newNode)) {
                     rtt.insert(newNode, closestNode);
-                    if (newNode->closeTo(goal, goalFindTolerance)) {
-                        rtt.insert(goal, newNode);
-                        goalFound = true;
-                        std::cout << "GOAL FOUND!";
-                    }
                     vertices.points.push_back(newNode->getNodeAsPoint());    //for drawing vertices
                     edges.points.push_back(closestNode->getNodeAsPoint());    //for drawing edges. The line list needs two points for each line
                     edges.points.push_back(newNode->getNodeAsPoint());
+
+                    // if the goal is close enough
+                    if (newNode->closeTo(goalNode, goalFindTolerance)) {
+                        rtt.insert(goalNode, newNode);
+                        goalFound = true;
+                        std::cout << "GOAL FOUND!";
+                        edges.points.push_back(newNode->getNodeAsPoint());
+                        edges.points.push_back(goalNode->getNodeAsPoint());
+                    }
                 }
             }
         }
-
         //publish msgs
         marker_pub.publish(vertices);
         marker_pub.publish(edges);
