@@ -40,4 +40,8 @@ namespace e503 {
         }
         return false;
     }
+
+    void StateSpace::addObstacle(Obstacle *obstacle) {
+        obstacles.push_back(obstacle);
+    }
 }

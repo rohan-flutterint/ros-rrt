@@ -2,6 +2,7 @@
 #include <cmath>
 #include "Node.h"
 #include "RRT.h"
+#include "Obstacle.h"
 #include "StateSpace.h"
 #include <stdlib.h>
 #include <cstdio>
@@ -28,11 +29,17 @@ int main(int argc, char **argv) {
     // for generating a random number
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 20, 0, 20);
+    stateSpace.addObstacle(new Obstacle(7, 13, 12, 16));
+    stateSpace.addObstacle(new Obstacle(3, 9, 18, 10));
+    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5));
+
+    float EPSILON = 0.5;
     Node *startNode = new Node(0, 0, 0);
     Node *goalNode = new Node(18,18,0);
     RRT rtt;
     rtt.insert(startNode, 0);
     std::vector<Node *> shortestPath;
+    std::vector<Node *> robotPath;
 
     // the goalNode is found
     bool goalFound = false;
@@ -42,37 +49,42 @@ int main(int argc, char **argv) {
     {   /* *//******************** From here, we are defining and drawing two obstacles in the workspace **************************/
 
         // define two obstacles
-        visualization_msgs::Marker obst1, obst2, start, goal;
+        visualization_msgs::Marker obst1, obst2, obst3, start, goal;
 
         // Set obst1 and obst2 as a Cube and Cylinder, respectively
         obst1.type = visualization_msgs::Marker::CUBE;
         obst2.type = visualization_msgs::Marker::CUBE;
+        obst3.type = visualization_msgs::Marker::CUBE;
         start.type = visualization_msgs::Marker::SPHERE;
         goal.type = visualization_msgs::Marker::SPHERE;
 
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-        obst1.header.frame_id = obst2.header.frame_id = start.header.frame_id = goal.header.frame_id = "map";
-        obst1.header.stamp = obst2.header.stamp = start.header.stamp = goal.header.stamp = ros::Time::now();
+        obst1.header.frame_id = obst2.header.frame_id = obst3.header.frame_id = start.header.frame_id = goal.header.frame_id = "map";
+        obst1.header.stamp = obst2.header.stamp = obst3.header.stamp= start.header.stamp = goal.header.stamp = ros::Time::now();
 
         // Set the namespace and id
-        obst1.ns = obst2.ns = "obstacles";
+        obst1.ns = obst2.ns = obst3.ns = "obstacles";
         obst1.id = 0;
         obst2.id = 1;
+        obst3.id = 2;
         start.ns = goal.ns = "markers";
         start.id = 2;
         goal.id = 3;
 
         // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-        obst1.action = obst2.action = start.action = goal.action = visualization_msgs::Marker::ADD;
+        obst1.action = obst2.action = obst3.action =  start.action = goal.action = visualization_msgs::Marker::ADD;
 
         start.scale.x = start.scale.y = goal.scale.x = goal.scale.y = 0.5;
         goal.scale.z = start.scale.z = 0.1;
                 // Set the scale of the marker
-        obst1.scale.x = 2.0;
-        obst1.scale.y = 3.0;
-        obst1.scale.z = obst2.scale.z = 0.5;
-        obst2.scale.x = 4.0;
-        obst2.scale.y = 5.0;
+        obst1.scale.x = 6.0;
+        obst1.scale.y = 4.0;
+        obst1.scale.z = obst2.scale.z = obst3.scale.z= 0.5;
+        obst2.scale.x = 6.0;
+        obst2.scale.y = 8.0;
+
+        obst3.scale.x = 4.0;
+        obst3.scale.y = 7.0;
 
         start.pose.position.x = startNode->x;
         start.pose.position.y = startNode->y;
@@ -83,8 +95,8 @@ int main(int argc, char **argv) {
 
 
         // Set the pose of the marker. since a side of the obstacle obst1 is 1m as defined above, now we place the obst1 center at (1, 2, 0.5). z-axis is height
-        obst1.pose.position.x = 2;
-        obst1.pose.position.y = 4;
+        obst1.pose.position.x = 10;
+        obst1.pose.position.y = 14;
         obst1.pose.position.z = 0;
         obst1.pose.orientation.x = 0.0;
         obst1.pose.orientation.y = 0.0;
@@ -92,9 +104,13 @@ int main(int argc, char **argv) {
         obst1.pose.orientation.w = 1.0;	//(x, y, z, w) is a quaternion, ignore it here
 
         obst2.pose.position.x = 6;
-        obst2.pose.position.y = 8;
+        obst2.pose.position.y = 14;
         obst2.pose.position.z = 0;
-        start.pose.orientation = goal.pose.orientation = obst2.pose.orientation = obst1.pose.orientation;
+
+        obst3.pose.position.x = 12;
+        obst3.pose.position.y = 4;
+        obst3.pose.position.z = 0;
+        start.pose.orientation = goal.pose.orientation = obst3.pose.orientation =  obst2.pose.orientation = obst1.pose.orientation;
 
         // Set the color red, green, blue. if not set, by default the value is 0
         obst1.color.r = 1.0f;
@@ -102,7 +118,7 @@ int main(int argc, char **argv) {
         obst1.color.b = 1.0f;
         obst1.color.a = 1.0;		//be sure to set alpha to something non-zero, otherwise it is transparent
 
-        obst2.color = obst1.color;
+        obst2.color = obst3.color = obst1.color;
 
         start.color.r = 0.0f;
         start.color.g = 0.0f;
@@ -115,11 +131,12 @@ int main(int argc, char **argv) {
         goal.color.a = 1.0;
 
 
-        obst1.lifetime = obst2.lifetime = start.lifetime = goal.lifetime = ros::Duration();
+        obst1.lifetime = obst2.lifetime = obst3.lifetime = start.lifetime = goal.lifetime = ros::Duration();
 
         // publish these messages to ROS system
         marker_pub.publish(obst1);
         marker_pub.publish(obst2);
+        marker_pub.publish(obst3);
         marker_pub.publish(start);
         marker_pub.publish(goal);
         /************************* From here, we are using points, lines, to draw a tree structure *** ******************/
@@ -171,8 +188,9 @@ int main(int argc, char **argv) {
         geometry_msgs::Point p0 = startNode->getNodeAsPoint();
         float length = 1;		//length of each edge
 
+        // find the goal using RTT
         if (!goalFound) {
-            int herz = 10;        //every 10 ROS frames we draw an edge
+            int herz = 2;        //every 10 ROS frames we draw an edge
             if (frame_count % herz == 0) {
 
                 // adding goalNode bias
@@ -184,7 +202,7 @@ int main(int argc, char **argv) {
                     randomNode = goalNode;
                 }
                 Node *closestNode = rtt.getNearestNeighbor(randomNode);
-                Node *newNode = rtt.extendNode(closestNode, randomNode, 1.0);
+                Node *newNode = rtt.extendNode(closestNode, randomNode, EPSILON);
                 if (!stateSpace.isObstructed(newNode)) {
                     rtt.insert(newNode, closestNode);
                     vertices.points.push_back(newNode->getNodeAsPoint());    //for drawing vertices
@@ -200,12 +218,14 @@ int main(int argc, char **argv) {
 
                         //calculate shortest path
                         shortestPath = rtt.extractShortestPath(goalNode);
+                        robotPath = shortestPath;
                     }
                 }
             }
         }
+        // Draw the shortest path
         bool shortestPathDrawn = false;
-        int herz = 10;
+        int herz = 2;
         if ((frame_count % herz == 0) & goalFound & !shortestPathDrawn) {
             if (!shortestPath.empty()) {
                 Node *pathNode = shortestPath.back();
@@ -229,13 +249,13 @@ int main(int argc, char **argv) {
 
 
         */
-/******************** From here, we are defining and drawing a simple robot **************************//*
+/******************** From here, we are defining and drawing a simple robot **************************/
 
 
         // a simple sphere represents a robot
         static visualization_msgs::Marker rob;
         static visualization_msgs::Marker path;
-        rob.type = visualization_msgs::Marker::SPHERE;
+        rob.type = visualization_msgs::Marker::CUBE;
         path.type = visualization_msgs::Marker::LINE_STRIP;
 
         rob.header.frame_id = path.header.frame_id = "map";  //NOTE: this should be "paired" to the frame_id entry in Rviz, the default setting in Rviz is "map"
@@ -260,26 +280,17 @@ int main(int argc, char **argv) {
         path.scale.x = 0.02;
         path.pose.orientation.w = 1.0;
 
-        int num_slice2 = 200;		// divide a circle into segments
-        static int slice_index2 = 0;
-        if(frame_count % 2 == 0 && path.points.size() <= num_slice2)  //update every 2 ROS frames
+        if(frame_count % 2 == 0 && !robotPath.empty() & shortestPathDrawn)  //update every 2 ROS frames
         {
-            geometry_msgs::Point p;
-
-            float angle = slice_index2*2*M_PI/num_slice2;
-            slice_index2 ++ ;
-            p.x = 4 * cos(angle) - 0.5;  	//some random circular trajectory, with radius 4, and offset (-0.5, 1, .05)
-            p.y = 4 * sin(angle) + 1.0;
-            p.z = 0.05;
-
+            geometry_msgs::Point p = robotPath.back()->getNodeAsPoint();
             rob.pose.position = p;
             path.points.push_back(p);		//for drawing path, which is line strip type
+            robotPath.pop_back();
         }
 
         marker_pub.publish(rob);
         marker_pub.publish(path);
 
-*/
 
         /******************** To here, we finished displaying our components **************************/
 
@@ -300,35 +311,4 @@ int main(int argc, char **argv) {
         loop_rate.sleep();
         ++frame_count;
     }
-
-    /*
-    // for generating a random number
-    srand (static_cast <unsigned> (time(NULL)));
-
-    StateSpace stateSpace(0, 20, 0, 20);
-    Node *randomNode = stateSpace.genRandomNodeInSpace();
-    printf("Random Node: (%.2f, %.2f, %.2f)\n", randomNode->x, randomNode->y, randomNode->theta);
-
-    RRT tree;
-    Node *root = new Node(3, 4, 45);
-    Node *node2 = new Node(5, 6, 45);
-    Node *node3 = new Node(8, 4, 90);
-    Node *node4 = new Node(14, 20, 45);
-    Node *node5 = new Node(18, 2, 5);
-    tree.insert(root, 0);
-    tree.insert(node2, root);
-    tree.insert(node4, node2);
-    tree.insert(node3, root);
-    tree.insert(node5, root);
-
-    float epsilon = 1;
-
-    Node *closestNode = tree.getNearestNeighbor(randomNode);
-    printf("Closest Node: (%.2f, %.2f, %.2f)\n", closestNode->x, closestNode->y, closestNode->theta);
-
-    RRT rtt;
-    Node *newNode = rtt.extendNode(closestNode, randomNode, epsilon);
-    printf("New Node: (%.2f, %.2f, %.2f)\n", newNode->x, newNode->y, newNode->theta);
-    //tree.printTree(root);
-    return 0;*/
 }
