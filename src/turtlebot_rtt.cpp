@@ -29,8 +29,13 @@ int main(int argc, char **argv) {
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 20, 0, 20);
     Node *start = new Node(0, 0, 0);
+    Node *goal = new Node(18,18,0);
     RRT rtt;
     rtt.insert(start, 0);
+
+    // the goal is found
+    bool goalFound = false;
+    float goalFindTolerance = 1.0;
 
     while (ros::ok())
     {   /* *//******************** From here, we are defining and drawing two obstacles in the workspace **************************//*
@@ -120,23 +125,33 @@ int main(int argc, char **argv) {
         geometry_msgs::Point p0 = start->getNodeAsPoint();
         float length = 1;		//length of each edge
 
-        int herz = 10;		//every 10 ROS frames we draw an edge
-        if(frame_count % herz == 0)
-        {
-            Node *randomNode = stateSpace.genRandomNodeInSpace();
-            Node *closestNode = rtt.getNearestNeighbor(randomNode);
-            Node *newNode = rtt.extendNode(closestNode, randomNode, 1.0);
-            rtt.
-            rtt.insert(newNode, closestNode);
-            randomNode->printNode();
-            closestNode->printNode();
-            newNode->printNode();
-            std::cout << "\n\n\n";
+        if (!goalFound) {
+            int herz = 10;        //every 10 ROS frames we draw an edge
+            if (frame_count % herz == 0) {
 
-            vertices.points.push_back(closestNode->getNodeAsPoint());	//for drawing vertices
-            vertices.points.push_back(newNode->getNodeAsPoint());	//for drawing vertices
-            edges.points.push_back(closestNode->getNodeAsPoint());	//for drawing edges. The line list needs two points for each line
-            edges.points.push_back(newNode->getNodeAsPoint());
+                // adding goal bias
+                double randomNumber = ((double) rand() / (RAND_MAX));
+                Node *randomNode = NULL;
+                if (randomNumber > 0.5) {
+                    randomNode = stateSpace.genRandomNodeInSpace();
+                } else {
+                    randomNode = goal;
+                }
+
+                Node *closestNode = rtt.getNearestNeighbor(randomNode);
+                Node *newNode = rtt.extendNode(closestNode, randomNode, 2.0);
+                if (!stateSpace.isObstructed(newNode)) {
+                    rtt.insert(newNode, closestNode);
+                    if (newNode->closeTo(goal, goalFindTolerance)) {
+                        rtt.insert(goal, newNode);
+                        goalFound = true;
+                        std::cout << "GOAL FOUND!";
+                    }
+                    vertices.points.push_back(newNode->getNodeAsPoint());    //for drawing vertices
+                    edges.points.push_back(closestNode->getNodeAsPoint());    //for drawing edges. The line list needs two points for each line
+                    edges.points.push_back(newNode->getNodeAsPoint());
+                }
+            }
         }
 
         //publish msgs

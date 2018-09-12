@@ -53,8 +53,6 @@ namespace e503 {
             while (!treeNodes.empty()) {
                 currentNode = treeNodes.front();
                 currentNodeDistance = getEuclideanDistance(currentNode, randomNode);
-                /*printf("Current Node: (%.2f, %.2f, %.2f) and the distance from Random Node: %f\n", currentNode->x,
-                       currentNode->y, currentNode->theta, currentNodeDistance);*/
                 if (minDistance > currentNodeDistance) {
                     minDistance = currentNodeDistance;
                     closestNode = currentNode;
@@ -74,9 +72,44 @@ namespace e503 {
     }
 
     Node * RRT::extendNode(Node *currentNode, Node *randomNode, float epsilon) {
-        float vectorGradient = tanf((randomNode->y - currentNode->y)/(randomNode->x - currentNode->x));
-        float x = currentNode->x + epsilon * cos(vectorGradient);
-        float y = currentNode->y + epsilon * sin(vectorGradient);
+        float deltaX = randomNode->x - currentNode->x;
+        float deltaY = randomNode->y - currentNode->y;
+        float x = 0, y = 0;
+
+        if (deltaX == 0 & deltaY == 0) {
+            return new Node(currentNode->x, currentNode->y, 0);
+        }
+        else if (deltaX == 0) {
+            x = currentNode->x;
+            if (deltaY < 0) {
+                y = currentNode->y - epsilon;
+            } else {
+                y = currentNode->y + epsilon;
+            }
+        }
+        else if (deltaY == 0) {
+            y = currentNode->y;
+            if (deltaX < 0) {
+                x = currentNode->x - epsilon;
+            } else {
+                x = currentNode->x + epsilon;
+            }
+        }
+        else {
+            std::cout<<"deltaX " << deltaX << "\n";
+            double vectorGradient = atan(abs(deltaY) / abs(deltaX));
+
+            if (deltaY < 0) {
+                y = currentNode->y - epsilon*sin(vectorGradient);
+            } else {
+                y = currentNode->y + epsilon*sin(vectorGradient);
+            }
+            if (deltaX < 0) {
+                x = currentNode->x - epsilon*cos(vectorGradient);
+            } else {
+                x = currentNode->x + epsilon*cos(vectorGradient);
+            }
+        }
         //todo: change this
         return new Node(x, y, 0);
     }

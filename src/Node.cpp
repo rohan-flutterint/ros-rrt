@@ -5,6 +5,7 @@
 #include "Node.h"
 #include <cstdlib>
 #include <cstdio>
+#include <cmath>
 
 namespace e503 {
     Node::Node(float x, float y, float theta) {
@@ -29,5 +30,9 @@ namespace e503 {
     bool Node::printNode() {
         printf(" Node: (%.2f, %.2f, %.2f) \n", this->x, this->y, this->theta);
     };
+
+    bool Node::closeTo(Node *node, float distanceTolerance) {
+        return (abs(this->x - node->x) < distanceTolerance) &  (abs(this->y - node->y) < distanceTolerance);
+    }
 
 }
