@@ -15,6 +15,7 @@ namespace e503 {
         parent = 0;
         p.x = x;
         p.y = y;
+        p.z = theta;
     }
 
     Node::Node(geometry_msgs::Point) {
@@ -37,5 +38,9 @@ namespace e503 {
 
     bool Node::equals(Node *node) {
         return this->x == node->x & this->y == node->y & this->theta == node->theta;
+    }
+
+    void Node::getGradient(Node *node) {
+        this->theta = p.z = atan((node->x - x)/(node->y - y));
     }
 }

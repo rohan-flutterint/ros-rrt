@@ -31,21 +31,24 @@ int main(int argc, char **argv) {
     // for generating a random number
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 20, 0, 20);
-    stateSpace.addObstacle(new Obstacle(7, 13 , 12, 16, robot_scale_x, robot_scale_y));
-    stateSpace.addObstacle(new Obstacle(3, 9 , 10, 18, robot_scale_x, robot_scale_y));
-    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5, robot_scale_x, robot_scale_y));
+    stateSpace.addObstacle(new Obstacle(7, 13 , 12, 16, robot_scale_x/2, robot_scale_y/2));
+    stateSpace.addObstacle(new Obstacle(3, 9 , 10, 18, robot_scale_x/2, robot_scale_y/2));
+    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5, robot_scale_x/2, robot_scale_y/2));
 
     float EPSILON = 0.5;
     Node *startNode = new Node(0, 0, 0);
     Node *goalNode = new Node(18,18,0);
-    RRT rtt;
-    rtt.insert(startNode, 0);
+    RRT rrt;
+    rrt.insert(startNode, 0);
     std::vector<Node *> shortestPath;
+    std::vector<Node *> roughShortestPath;
     std::vector<Node *> robotPath;
 
     // the goalNode is found
     bool goalFound = false;
     float goalFindTolerance = 1.0;
+
+    bool shortestPathDrawn = false;
 
     while (ros::ok())
     {   /* *//******************** From here, we are defining and drawing two obstacles in the workspace **************************/
@@ -203,30 +206,30 @@ int main(int argc, char **argv) {
                 } else {
                     randomNode = goalNode;
                 }
-                Node *closestNode = rtt.getNearestNeighbor(randomNode);
-                Node *newNode = rtt.extendNode(closestNode, randomNode, EPSILON);
+                Node *closestNode = rrt.getNearestNeighbor(randomNode);
+                Node *newNode = rrt.extendNode(closestNode, randomNode, EPSILON);
                 if (!stateSpace.isObstructed(newNode) & !stateSpace.edgeIsObstructed(closestNode, newNode)) {
-                    rtt.insert(newNode, closestNode);
+                    rrt.insert(newNode, closestNode);
                     vertices.points.push_back(newNode->getNodeAsPoint());    //for drawing vertices
                     edges.points.push_back(closestNode->getNodeAsPoint());    //for drawing edges. The line list needs two points for each line
                     edges.points.push_back(newNode->getNodeAsPoint());
 
                     // if the goal is close enough
                     if (newNode->closeTo(goalNode, goalFindTolerance)) {
-                        rtt.insert(goalNode, newNode);
+                        rrt.insert(goalNode, newNode);
                         goalFound = true;
                         edges.points.push_back(newNode->getNodeAsPoint());
                         edges.points.push_back(goalNode->getNodeAsPoint());
 
                         //calculate shortest path
-                        shortestPath = rtt.extractShortestPath(goalNode);
-                        robotPath = shortestPath;
+                        shortestPath = rrt.extractShortestPath(goalNode);
+                        roughShortestPath = shortestPath;
+                        std::cout << roughShortestPath.size() << "Size\n";
                     }
                 }
             }
         }
         // Draw the shortest path
-        bool shortestPathDrawn = false;
         int herz = 2;
         if ((frame_count % herz == 0) & goalFound & !shortestPathDrawn) {
             if (!shortestPath.empty()) {
@@ -239,9 +242,15 @@ int main(int argc, char **argv) {
                 prevNode = pathNode;
                 shortestPath.pop_back();
             }
-            else
+            else {
                 shortestPathDrawn = true;
+
+                // Robot Path
+                std::reverse(roughShortestPath.begin(), roughShortestPath.end());
+                robotPath = rrt.processFinalRobotPath(roughShortestPath);
+            }
         }
+
         //publish msgs
         marker_pub.publish(vertices);
         marker_pub.publish(sp_vertices);
@@ -284,9 +293,12 @@ int main(int argc, char **argv) {
         path.scale.x = 0.02;
         path.pose.orientation.w = 1.0;
 
-        if(frame_count % 2 == 0 && !robotPath.empty() & shortestPathDrawn)  //update every 2 ROS frames
+        if(frame_count % 20 == 0 && !robotPath.empty() & shortestPathDrawn)  //update every 2 ROS frames
         {
             geometry_msgs::Point p = robotPath.back()->getNodeAsPoint();
+            std::cout <<" IN HERE! "<< p.z << "\n";
+            rob.pose.orientation.w = p.z;
+            p.z = 0;
             rob.pose.position = p;
             path.points.push_back(p);		//for drawing path, which is line strip type
             robotPath.pop_back();

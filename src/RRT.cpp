@@ -122,4 +122,20 @@ namespace e503 {
         }
         return shortestPathFromGoal;
     }
+
+    std::vector<Node *> RRT::processFinalRobotPath(std::vector<Node *> path) {
+        std::vector<Node *> finalPath;
+        Node *currentNode = path.back();
+        finalPath.push_back(currentNode);
+        Node *parentNode = path.back()->parent;
+        while (!parentNode->equals(root)) {
+            parentNode->getGradient(currentNode);
+            finalPath.push_back(parentNode);
+            currentNode = parentNode;
+            parentNode = parentNode->parent;
+        }
+        parentNode->getGradient(currentNode);
+        finalPath.push_back(parentNode);
+        return finalPath;
+    }
 }

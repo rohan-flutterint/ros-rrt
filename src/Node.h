@@ -19,6 +19,7 @@ namespace e503 {
         bool printNode();
         bool closeTo(Node *node, float distanceTolerance);
         bool equals(Node* node);
+        void getGradient(Node * node);
     };
 }
 

@@ -54,4 +54,22 @@ namespace e503 {
         return false;
     }
 
+    std::vector<Node *> StateSpace::smoothenPath(std::vector<Node *> roughShortestPath) {
+        std::vector<Node *> robotPath;
+        int i = 0;
+        int pathSize = roughShortestPath.size();
+        // take the first node (start Node)
+        Node *currentNode = roughShortestPath[i];
+        while (i < pathSize - 1) {
+            int j = i + 1;
+            while (j < pathSize && !edgeIsObstructed(currentNode, roughShortestPath[j])) {
+                j++;
+            }
+            robotPath.push_back(currentNode);
+            currentNode = roughShortestPath[j - 1];
+            i = j -1;
+        }
+        robotPath.push_back(currentNode);
+        return robotPath;
+    }
 }

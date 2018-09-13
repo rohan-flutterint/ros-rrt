@@ -28,6 +28,8 @@ namespace e503 {
 
         bool edgeIsObstructed(Node *nearestNode, Node *newNode);
 
+        std::vector<Node *> smoothenPath(std::vector<Node *> roughShortestPath);
+
     private:
         float min_x, max_x, min_y, max_y;
 

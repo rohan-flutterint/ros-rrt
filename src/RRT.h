@@ -6,6 +6,7 @@
 #define RTT_TREE_H
 
 #include "Node.h"
+#include "StateSpace.h"
 
 namespace e503 {
 
@@ -22,6 +23,8 @@ namespace e503 {
         Node *extendNode(Node *currentNode, Node *randomNode, float epsilon);
 
         std::vector<Node *> extractShortestPath(Node *goal);
+
+        std::vector<Node *> processFinalRobotPath(std::vector<Node *>);
 
     private:
         Node *root;
