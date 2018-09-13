@@ -32,7 +32,7 @@ namespace e503 {
         if (!isWithinStateSpace(node))
             return true;
         else {
-            for(int i = 0; i < obstacles.size(); i++)    {
+            for(int i = 0; i < obstacles.size(); ++i) {
                 if (obstacles[i]->isWithinObstacle(node)) {
                     return true;
                 }
@@ -44,4 +44,14 @@ namespace e503 {
     void StateSpace::addObstacle(Obstacle *obstacle) {
         obstacles.push_back(obstacle);
     }
+
+    bool StateSpace::edgeIsObstructed(Node *nearestNode, Node *newNode) {
+        for(int i = 0; i < obstacles.size(); ++i)    {
+            if (obstacles[i]->edgeWithinObstacle(nearestNode, newNode)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

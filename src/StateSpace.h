@@ -26,6 +26,8 @@ namespace e503 {
         // add an obstacle to the statespace
         void addObstacle(Obstacle *obstacle);
 
+        bool edgeIsObstructed(Node *nearestNode, Node *newNode);
+
     private:
         float min_x, max_x, min_y, max_y;
 

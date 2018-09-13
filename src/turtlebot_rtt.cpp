@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 20, 0, 20);
     stateSpace.addObstacle(new Obstacle(7, 13 , 12, 16, robot_scale_x, robot_scale_y));
-    stateSpace.addObstacle(new Obstacle(3, 9 , 18, 10, robot_scale_x, robot_scale_y));
+    stateSpace.addObstacle(new Obstacle(3, 9 , 10, 18, robot_scale_x, robot_scale_y));
     stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5, robot_scale_x, robot_scale_y));
 
     float EPSILON = 0.5;
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
                 }
                 Node *closestNode = rtt.getNearestNeighbor(randomNode);
                 Node *newNode = rtt.extendNode(closestNode, randomNode, EPSILON);
-                if (!stateSpace.isObstructed(newNode)) {
+                if (!stateSpace.isObstructed(newNode) & !stateSpace.edgeIsObstructed(closestNode, newNode)) {
                     rtt.insert(newNode, closestNode);
                     vertices.points.push_back(newNode->getNodeAsPoint());    //for drawing vertices
                     edges.points.push_back(closestNode->getNodeAsPoint());    //for drawing edges. The line list needs two points for each line

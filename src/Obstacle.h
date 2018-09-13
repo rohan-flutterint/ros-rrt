@@ -14,10 +14,13 @@ namespace e503 {
 
         bool isWithinObstacle(Node *node);
 
-        bool lineCrossingObstacle(Node* node1, Node *node2);
+        bool edgeWithinObstacle(Node *node1, Node *node2);
 
-    private:
         float min_x, max_x, min_y, max_y;
+    private:
+        float obstacle_obstructed_radius;
+        float calculateObstacleRadius();
+        float center_x, center_y;
     };
 }
 
