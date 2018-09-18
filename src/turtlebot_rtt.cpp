@@ -8,10 +8,13 @@
 #include <cstdio>
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
+#include <tf/tf.h>
 
 using namespace e503;
 
 int main(int argc, char **argv) {
+    float GOAL_X = 28;
+    float GOAL_Y = 10;
 
     ros::init(argc, argv, "turtlebot_rrt");
 
@@ -26,18 +29,20 @@ int main(int argc, char **argv) {
     int frame_count = 0;
     float f = 0.0;
 
-    float robot_scale_x = 1;
+    float robot_scale_x = 0.5;
     float robot_scale_y = 1;
+    float obstaclePaddingCSpace = (robot_scale_x > robot_scale_y) ? robot_scale_x/2 : robot_scale_y/2;
     // for generating a random number
     srand (static_cast <unsigned> (time(NULL)));
-    StateSpace stateSpace(0, 20, 0, 20);
-    stateSpace.addObstacle(new Obstacle(7, 13 , 12, 16, robot_scale_x/2, robot_scale_y/2));
-    stateSpace.addObstacle(new Obstacle(3, 9 , 10, 18, robot_scale_x/2, robot_scale_y/2));
-    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5, robot_scale_x/2, robot_scale_y/2));
+    StateSpace stateSpace(0, 30, 0, 30);
+    stateSpace.addObstacle(new Obstacle(19, 21 , 4, 26, obstaclePaddingCSpace, obstaclePaddingCSpace));
+    stateSpace.addObstacle(new Obstacle(10, 14 , 10, 18, obstaclePaddingCSpace, obstaclePaddingCSpace));
+    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5, obstaclePaddingCSpace, obstaclePaddingCSpace));
+    stateSpace.addObstacle(new Obstacle(10, 14 , 20, 30, obstaclePaddingCSpace, obstaclePaddingCSpace));
 
-    float EPSILON = 0.5;
+    float EPSILON = 0.3;
     Node *startNode = new Node(0, 0, 0);
-    Node *goalNode = new Node(18,18,0);
+    Node *goalNode = new Node(GOAL_X,GOAL_Y,0);
     RRT rrt;
     rrt.insert(startNode, 0);
     std::vector<Node *> shortestPath;
@@ -54,42 +59,47 @@ int main(int argc, char **argv) {
     {   /* *//******************** From here, we are defining and drawing two obstacles in the workspace **************************/
 
         // define two obstacles
-        visualization_msgs::Marker obst1, obst2, obst3, start, goal;
+        visualization_msgs::Marker obst1, obst2, obst3, obst4, start, goal;
 
         // Set obst1 and obst2 as a Cube and Cylinder, respectively
         obst1.type = visualization_msgs::Marker::CUBE;
         obst2.type = visualization_msgs::Marker::CUBE;
         obst3.type = visualization_msgs::Marker::CUBE;
+        obst4.type = visualization_msgs::Marker::CUBE;
         start.type = visualization_msgs::Marker::SPHERE;
         goal.type = visualization_msgs::Marker::SPHERE;
 
         // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-        obst1.header.frame_id = obst2.header.frame_id = obst3.header.frame_id = start.header.frame_id = goal.header.frame_id = "map";
-        obst1.header.stamp = obst2.header.stamp = obst3.header.stamp= start.header.stamp = goal.header.stamp = ros::Time::now();
+        obst1.header.frame_id = obst2.header.frame_id = obst3.header.frame_id = obst4.header.frame_id= start.header.frame_id = goal.header.frame_id = "map";
+        obst1.header.stamp = obst2.header.stamp = obst3.header.stamp= obst4.header.stamp= start.header.stamp = goal.header.stamp = ros::Time::now();
 
         // Set the namespace and id
-        obst1.ns = obst2.ns = obst3.ns = "obstacles";
+        obst1.ns = obst2.ns = obst3.ns = obst4.ns =  "obstacles";
         obst1.id = 0;
         obst2.id = 1;
         obst3.id = 2;
+        obst4.id = 3;
         start.ns = goal.ns = "markers";
         start.id = 2;
         goal.id = 3;
 
         // Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
-        obst1.action = obst2.action = obst3.action =  start.action = goal.action = visualization_msgs::Marker::ADD;
+        obst1.action = obst2.action = obst3.action = obst4.action =  start.action = goal.action = visualization_msgs::Marker::ADD;
 
         start.scale.x = start.scale.y = goal.scale.x = goal.scale.y = 0.5;
         goal.scale.z = start.scale.z = 0.1;
                 // Set the scale of the marker
-        obst1.scale.x = 6.0;
-        obst1.scale.y = 4.0;
-        obst1.scale.z = obst2.scale.z = obst3.scale.z= 0.5;
-        obst2.scale.x = 6.0;
+        obst1.scale.x = 2.0;
+        obst1.scale.y = 22.0;
+        obst1.scale.z = obst2.scale.z = obst3.scale.z=  obst4.scale.z= 0.5;
+        obst2.scale.x = 4.0;
         obst2.scale.y = 8.0;
 
         obst3.scale.x = 4.0;
         obst3.scale.y = 7.0;
+
+        obst4.scale.x = 4.0;
+        obst4.scale.y = 10.0;
 
         start.pose.position.x = startNode->x;
         start.pose.position.y = startNode->y;
@@ -100,22 +110,26 @@ int main(int argc, char **argv) {
 
 
         // Set the pose of the marker. since a side of the obstacle obst1 is 1m as defined above, now we place the obst1 center at (1, 2, 0.5). z-axis is height
-        obst1.pose.position.x = 10;
-        obst1.pose.position.y = 14;
+        obst1.pose.position.x = 20;
+        obst1.pose.position.y = 15;
         obst1.pose.position.z = 0;
         obst1.pose.orientation.x = 0.0;
         obst1.pose.orientation.y = 0.0;
         obst1.pose.orientation.z = 0.0;
         obst1.pose.orientation.w = 1.0;	//(x, y, z, w) is a quaternion, ignore it here
 
-        obst2.pose.position.x = 6;
+        obst2.pose.position.x = 12;
         obst2.pose.position.y = 14;
         obst2.pose.position.z = 0;
+
+        obst4.pose.position.x = 12;
+        obst4.pose.position.y = 25;
+        obst4.pose.position.z = 0;
 
         obst3.pose.position.x = 12;
         obst3.pose.position.y = 4;
         obst3.pose.position.z = 0;
-        start.pose.orientation = goal.pose.orientation = obst3.pose.orientation =  obst2.pose.orientation = obst1.pose.orientation;
+        start.pose.orientation = goal.pose.orientation = obst4.pose.orientation = obst3.pose.orientation =  obst2.pose.orientation = obst1.pose.orientation;
 
         // Set the color red, green, blue. if not set, by default the value is 0
         obst1.color.r = 1.0f;
@@ -123,7 +137,7 @@ int main(int argc, char **argv) {
         obst1.color.b = 1.0f;
         obst1.color.a = 1.0;		//be sure to set alpha to something non-zero, otherwise it is transparent
 
-        obst2.color = obst3.color = obst1.color;
+        obst2.color = obst3.color = obst4.color = obst1.color;
 
         start.color.r = 0.0f;
         start.color.g = 0.0f;
@@ -136,12 +150,13 @@ int main(int argc, char **argv) {
         goal.color.a = 1.0;
 
 
-        obst1.lifetime = obst2.lifetime = obst3.lifetime = start.lifetime = goal.lifetime = ros::Duration();
+        obst1.lifetime = obst2.lifetime = obst3.lifetime = obst4.lifetime = start.lifetime = goal.lifetime = ros::Duration();
 
         // publish these messages to ROS system
         marker_pub.publish(obst1);
         marker_pub.publish(obst2);
         marker_pub.publish(obst3);
+        marker_pub.publish(obst4);
         marker_pub.publish(start);
         marker_pub.publish(goal);
         /************************* From here, we are using points, lines, to draw a tree structure *** ******************/
@@ -195,7 +210,7 @@ int main(int argc, char **argv) {
 
         // find the goal using RTT
         if (!goalFound) {
-            int herz = 2;        //every 10 ROS frames we draw an edge
+            int herz = 1;        //every  ROS frames we draw an edge
             if (frame_count % herz == 0) {
 
                 // adding goalNode bias
@@ -295,11 +310,14 @@ int main(int argc, char **argv) {
 
         if(frame_count % 20 == 0 && !robotPath.empty() & shortestPathDrawn)  //update every 2 ROS frames
         {
-            geometry_msgs::Point p = robotPath.back()->getNodeAsPoint();
-            std::cout <<" IN HERE! "<< p.z << "\n";
-            rob.pose.orientation.w = p.z;
-            p.z = 0;
+            Node *robotNode = robotPath.back();
+            geometry_msgs::Point p = robotNode->getNodeAsPoint();
             rob.pose.position = p;
+            const tf::Quaternion &quaternion = tf::createQuaternionFromYaw(robotNode->theta);
+            rob.pose.orientation.w = quaternion.w();
+            rob.pose.orientation.x = quaternion.x();
+            rob.pose.orientation.y = quaternion.y();
+            rob.pose.orientation.z = quaternion.z();
             path.points.push_back(p);		//for drawing path, which is line strip type
             robotPath.pop_back();
         }

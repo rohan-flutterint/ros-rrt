@@ -10,6 +10,7 @@ project(turtlebot_rtt)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   visualization_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions

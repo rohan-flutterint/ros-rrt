@@ -41,6 +41,6 @@ namespace e503 {
     }
 
     void Node::getGradient(Node *node) {
-        this->theta = p.z = atan((node->x - x)/(node->y - y));
+        this->theta = atan((node->x - x)/(node->y - y));
     }
 }
