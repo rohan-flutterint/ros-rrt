@@ -29,18 +29,17 @@ int main(int argc, char **argv) {
     int frame_count = 0;
     float f = 0.0;
 
-    float robot_scale_x = 0.5;
+    float EPSILON = 0.5;
+    float robot_scale_x = 1;
     float robot_scale_y = 1;
     float obstaclePaddingCSpace = (robot_scale_x > robot_scale_y) ? robot_scale_x/2 : robot_scale_y/2;
     // for generating a random number
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 30, 0, 30);
     stateSpace.addObstacle(new Obstacle(19, 21 , 4, 26, obstaclePaddingCSpace, obstaclePaddingCSpace));
-    stateSpace.addObstacle(new Obstacle(10, 14 , 10, 18, obstaclePaddingCSpace, obstaclePaddingCSpace));
-    stateSpace.addObstacle(new Obstacle(10, 14, 0.5, 7.5, obstaclePaddingCSpace, obstaclePaddingCSpace));
+    stateSpace.addObstacle(new Obstacle(10, 14 , 9.5, 18.5, obstaclePaddingCSpace, obstaclePaddingCSpace));
+    stateSpace.addObstacle(new Obstacle(10, 14, 0, 8, obstaclePaddingCSpace, obstaclePaddingCSpace));
     stateSpace.addObstacle(new Obstacle(10, 14 , 20, 30, obstaclePaddingCSpace, obstaclePaddingCSpace));
-
-    float EPSILON = 0.3;
     Node *startNode = new Node(0, 0, 0);
     Node *goalNode = new Node(GOAL_X,GOAL_Y,0);
     RRT rrt;
@@ -48,6 +47,7 @@ int main(int argc, char **argv) {
     std::vector<Node *> shortestPath;
     std::vector<Node *> roughShortestPath;
     std::vector<Node *> robotPath;
+    std::vector<Node *> smoothenedRobotPath;
 
     // the goalNode is found
     bool goalFound = false;
@@ -93,10 +93,10 @@ int main(int argc, char **argv) {
         obst1.scale.y = 22.0;
         obst1.scale.z = obst2.scale.z = obst3.scale.z=  obst4.scale.z= 0.5;
         obst2.scale.x = 4.0;
-        obst2.scale.y = 8.0;
+        obst2.scale.y = 9.0;
 
         obst3.scale.x = 4.0;
-        obst3.scale.y = 7.0;
+        obst3.scale.y = 8.0;
 
         obst4.scale.x = 4.0;
         obst4.scale.y = 10.0;
@@ -237,9 +237,12 @@ int main(int argc, char **argv) {
                         edges.points.push_back(goalNode->getNodeAsPoint());
 
                         //calculate shortest path
-                        shortestPath = rrt.extractShortestPath(goalNode);
-                        roughShortestPath = shortestPath;
-                        std::cout << roughShortestPath.size() << "Size\n";
+                        roughShortestPath = rrt.extractShortestPath(goalNode);
+                        std::reverse(roughShortestPath.begin(), roughShortestPath.end());
+                        //smoothenedRobotPath = roughShortestPath;
+
+                        smoothenedRobotPath = stateSpace.smoothenPath(roughShortestPath, EPSILON/2);
+                        shortestPath = smoothenedRobotPath;
                     }
                 }
             }
@@ -259,10 +262,7 @@ int main(int argc, char **argv) {
             }
             else {
                 shortestPathDrawn = true;
-
-                // Robot Path
-                std::reverse(roughShortestPath.begin(), roughShortestPath.end());
-                robotPath = rrt.processFinalRobotPath(roughShortestPath);
+                robotPath = rrt.processFinalRobotPath(smoothenedRobotPath);
             }
         }
 
@@ -308,7 +308,7 @@ int main(int argc, char **argv) {
         path.scale.x = 0.02;
         path.pose.orientation.w = 1.0;
 
-        if(frame_count % 20 == 0 && !robotPath.empty() & shortestPathDrawn)  //update every 2 ROS frames
+        if(frame_count % 10 == 0 && !robotPath.empty() & shortestPathDrawn)  //update every 2 ROS frames
         {
             Node *robotNode = robotPath.back();
             geometry_msgs::Point p = robotNode->getNodeAsPoint();

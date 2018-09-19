@@ -21,24 +21,28 @@ namespace e503 {
     }
 
     bool Obstacle::edgeWithinObstacle(Node *node1, Node *node2) {
-       float dx = node2->x - node1->x;
-       float dy = node2->y - node1->y;
-       float dcx = (center_x - node1->x);
-       float dcy = (center_y - node1->y);
-       double innerProduct = dcx *dx + dcy*dy;
-       //check if the center projection on the line is within the line segment using inner product
-       if (!(0 <= innerProduct && innerProduct <= dx*dx + dy*dy))
-           return false;
-       //if the center projection is on the line segment, then check the distance
-       else {
-           float theta = acos(innerProduct/(sqrt(dx*dx + dy*dy)*sqrt(dcx*dcx + dcy*dcy)));
-           // minDistance = |cx| sin(theta)
-           float minDistance = sqrt(dcx*dcx + dcy*dcy) * sin(theta);
-           if (minDistance <= obstacle_obstructed_radius)
-               return true;
-           else
-               return false;
-       }
+      float d1 = (node2->y - node1->y)*min_x + (node1->x - node2->x)*min_y + (node2->x * node1->y - node2->y * node1->x);
+      float d2 = (node2->y - node1->y)*min_x + (node1->x - node2->x)*max_y + (node2->x * node1->y - node2->y * node1->x);
+      float d3 = (node2->y - node1->y)*max_x + (node1->x - node2->x)*min_y + (node2->x * node1->y - node2->y * node1->x);
+      float d4 = (node2->y - node1->y)*max_x + (node1->x - node2->x)*max_y + (node2->x * node1->y - node2->y * node1->x);
+
+      // brushes the obstacle
+      if (d1 == 0 || d2 == 0 || d3 == 0 || d4 == 0)
+          return true;
+      else if (d1 < 0 & d2 < 0 & d3 < 0 & d4 < 0)
+          return false;
+      else if (d1 > 0 & d2 > 0 & d3 > 0 & d4 > 0)
+          return false;
+      else if (node1->x < min_x & node2->x < min_x)
+          return false;
+      else if (node1->y < min_y & node2->y < min_y)
+          return false;
+      else if (node1->y > max_y & node2->y > max_y)
+          return false;
+      else if (node1->x > max_x & node2->x > max_x)
+          return false;
+      else
+          return true;
     }
 
     float Obstacle::calculateObstacleRadius() {

@@ -129,13 +129,14 @@ namespace e503 {
         finalPath.push_back(currentNode);
         Node *parentNode = path.back()->parent;
         while (!parentNode->equals(root)) {
-            parentNode->getGradient(currentNode);
+            parentNode->calculateGradient(currentNode);
             finalPath.push_back(parentNode);
             currentNode = parentNode;
             parentNode = parentNode->parent;
         }
-        parentNode->getGradient(currentNode);
+        parentNode->calculateGradient(currentNode);
         finalPath.push_back(parentNode);
+        std::cout<<finalPath.size() << " ROBOT PATH SIZE";
         return finalPath;
     }
 }

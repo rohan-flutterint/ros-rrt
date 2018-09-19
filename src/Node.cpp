@@ -40,7 +40,8 @@ namespace e503 {
         return this->x == node->x & this->y == node->y & this->theta == node->theta;
     }
 
-    void Node::getGradient(Node *node) {
+    void Node::calculateGradient(Node *node) {
         this->theta = atan((node->x - x)/(node->y - y));
+        std::cout<< theta;
     }
 }

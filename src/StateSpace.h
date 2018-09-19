@@ -28,7 +28,7 @@ namespace e503 {
 
         bool edgeIsObstructed(Node *nearestNode, Node *newNode);
 
-        std::vector<Node *> smoothenPath(std::vector<Node *> roughShortestPath);
+        std::vector<Node *> smoothenPath(std::vector<Node *> roughShortestPath, float interpolEpsilon);
 
     private:
         float min_x, max_x, min_y, max_y;
@@ -40,6 +40,9 @@ namespace e503 {
 
         //check if the node is within the statespace
         bool isWithinStateSpace(Node *node);
+
+        // interpolation
+        std::vector<Node *> generateInterploatedPath(Node *goalNode, float interpolEpsilon);
 
     };
 }
