@@ -29,15 +29,16 @@ int main(int argc, char **argv) {
     int frame_count = 0;
     float f = 0.0;
 
-    float EPSILON = 0.5;
-    float robot_scale_x = 1;
+    float EPSILON = 0.4;
+    float robot_scale_x = 1.5;
     float robot_scale_y = 1;
     float obstaclePaddingCSpace = (robot_scale_x > robot_scale_y) ? robot_scale_x/2 : robot_scale_y/2;
+    obstaclePaddingCSpace += 0.05;
     // for generating a random number
     srand (static_cast <unsigned> (time(NULL)));
     StateSpace stateSpace(0, 30, 0, 30);
     stateSpace.addObstacle(new Obstacle(19, 21 , 4, 26, obstaclePaddingCSpace, obstaclePaddingCSpace));
-    stateSpace.addObstacle(new Obstacle(10, 14 , 9.5, 18.5, obstaclePaddingCSpace, obstaclePaddingCSpace));
+    stateSpace.addObstacle(new Obstacle(10, 14 , 10, 18, obstaclePaddingCSpace, obstaclePaddingCSpace));
     stateSpace.addObstacle(new Obstacle(10, 14, 0, 8, obstaclePaddingCSpace, obstaclePaddingCSpace));
     stateSpace.addObstacle(new Obstacle(10, 14 , 20, 30, obstaclePaddingCSpace, obstaclePaddingCSpace));
     Node *startNode = new Node(0, 0, 0);
@@ -93,7 +94,7 @@ int main(int argc, char **argv) {
         obst1.scale.y = 22.0;
         obst1.scale.z = obst2.scale.z = obst3.scale.z=  obst4.scale.z= 0.5;
         obst2.scale.x = 4.0;
-        obst2.scale.y = 9.0;
+        obst2.scale.y = 8.0;
 
         obst3.scale.x = 4.0;
         obst3.scale.y = 8.0;

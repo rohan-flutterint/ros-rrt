@@ -41,7 +41,6 @@ namespace e503 {
     }
 
     void Node::calculateGradient(Node *node) {
-        this->theta = atan((node->x - x)/(node->y - y));
-        std::cout<< theta;
+        this->theta = atan((node->y - y)/(node->x - x));
     }
 }
