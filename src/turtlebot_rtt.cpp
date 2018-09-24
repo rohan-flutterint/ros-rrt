@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     int frame_count = 0;
     float f = 0.0;
 
-    float EPSILON = 0.4;
+    float EPSILON = 0.2;
     float robot_scale_x = 1.5;
     float robot_scale_y = 1;
     float obstaclePaddingCSpace = (robot_scale_x > robot_scale_y) ? robot_scale_x/2 : robot_scale_y/2;
